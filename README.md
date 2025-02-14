@@ -8,4 +8,6 @@
 
 5. LLM_coding_prompt_step3_evaluation.txt represents the LLM evaluation for the merged data. This document include the coding part and prompt string part
 
-6. The output after LLM evaluation for experiments is recorded in Final_output.csv, where the "YS UTS Elongation" values are predicted by LLM
+6. After density screening, the remaining solutions are evaluated by LLM and stored in reevaluate_output.csv, where the "YS UTS Elongation" values are predicted by LLM
+
+7. Finally, the 20 selected solutions are recorded in Final_output.csv
