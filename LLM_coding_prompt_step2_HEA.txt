@@ -1,0 +1,78 @@
+The coding for acquiring K3 (Coding book of HEA Data)
+
+1. Coding:
+ def examples_generator(self):
+        examples = []
+        HEA_D = ['C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.datax_HEA)[0]):
+            HEA = {}
+            StrHEA = '['
+            for j in range(len(HEA_D)):
+                StrHEA += f'{HEA_D[j]} = {self.datax_HEA[i,j]}'
+                if j <= len(HEA_D)-1:
+                    StrHEA += ','
+            StrHEA += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.datay_HEA[i,j]}'
+                if j <= len(Objective_name)-1:
+                    StrObj += ','
+            StrObj += ']'
+
+            HEA['Q'] = '## ' + StrHEA + ' ##'
+            HEA['A'] = '## ' + StrObj + ' ##'
+            examples.append(HEA)
+        return examples
+
+    def prompt_template_generator(self):
+        examples = self.examples_generator()
+
+        prefix = 'The following are the offline HEA alloy data composed by the compositions and the Fitness value. \n'
+        prefix += 'The corresponding fitness values includes: yield strength (YS: enhancing load-bearing capacity), ultimate tensile strength (UTS: increasing material performance under extreme conditions), and elongation (Elongation: ensuring toughness and deformability) to meet the diverse demands of various applications.\n'
+        prefix += 'Firstly, you need to collect relevant knowledge about HEA alloy.\n'
+        prefix += 'Then, you need to analyze the relationship between the compositions and Fitness values based on offline alloy data, and then perform the regression. \n'
+        prefix += f'Now I need you to combine the HEA domain knowledge with the offline data provided to you to analyze the impact of component {self.HEA_id} on fitness values.  If the data is missing, you need to supplement it based on domain knowledge. \n'
+        prefix += 'Your response must only contain the analyze result within 30 words. Do not generate other statement.'
+        prefix += f'{examples}'
+
+        return prefix
+
+    def K_gnerates(self):
+        FewShotprompt = self.prompt_template_generator()
+        message = []
+        message.append({"role": "system","content": "You are a expert in the HEA alloy research"})
+        message.append({"role": "user", "content": FewShotprompt})
+        client = OpenAI(
+            base_url="https://api.gpts.vin/v1",
+            api_key="sk-dRLkYviiOkPwiPIRPmkqjlW1X8DETPCZL3o1Vl7b4Cj4W3Hi"
+        )
+        while True:
+            start_time = time.time()
+            self.rate_limiter.add_request(request_text=FewShotprompt, current_time=start_time)
+            resp = client.chat.completions.create(
+                model='gpt-4o',
+                messages=message,
+                temperature=0.8,
+            )
+
+2. String:
+
+[{'role': 'system', 'content': 'You are a expert in the HEA alloy research'},
+ {'role': 'user',
+  'content': "The following are the offline HEA alloy data composed by the compositions and the Fitness value. \nThe corresponding fitness values includes: yield strength (YS: enhancing load-bearing capacity), ultimate tensile strength (UTS: increasing material performance under extreme conditions), and elongation (Elongation: ensuring toughness and deformability) to meet the diverse demands of various applications.\nFirstly, you need to collect relevant knowledge about HEA alloy.\nThen, you need to analyze the relationship between the compositions and Fitness values based on offline alloy data, and then perform the regression. \nNow I need you to combine the HEA domain knowledge with the offline data provided to you to analyze the impact of component C on fitness values.  If the data is missing, you need to supplement it based on domain knowledge. \nYour response must only contain the analyze result within 30 words. Do not generate other statement.[{'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'A': '## [YS = 1720.0,UTS = 1720.0,Elongation = 9.0,] ##'}, {'Q': '## [C = 0.0,Al = 7.0,V = 31.0,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 1634.0,UTS = 1867.0,Elongation = 3.5,] ##'}, {'Q': '## [C = 0.0,Al = 16.39,V = 0.0,Cr = 16.39,Mn = 0.0,Fe = 16.39,Co = 16.39,Ni = 34.44,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 1625.0,UTS = 1800.0,Elongation = 6.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 7.99,Cr = 14.5,Mn = 3.25,Fe = 14.92,Co = 35.42,Ni = 21.43,Cu = 2.49,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 1506.0,UTS = 1529.0,Elongation = 10.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 18.0,Ni = 7.0,Cu = 0.0,Mo = 7.5,Ti = 0.0,] ##', 'A': '## [YS = 1502.0,UTS = 1502.0,Elongation = 11.4,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'A': '## [YS = 1470.0,UTS = 1470.0,Elongation = 15.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'A': '## [YS = 1100.0,UTS = 1260.0,Elongation = 32.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 1053.0,UTS = 1201.0,Elongation = 35.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'A': '## [YS = 1020.0,UTS = 1200.0,Elongation = 36.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 982.0,UTS = 1191.0,Elongation = 43.0,] ##'}, {'Q': '## [C = 0.0,Al = 9.09,V = 0.0,Cr = 30.303,Mn = 0.0,Fe = 0.0,Co = 30.303,Ni = 30.304,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 945.0,UTS = 1230.0,Elongation = 37.5,] ##'}, {'Q': '## [C = 0.0,Al = 6.96,V = 0.0,Cr = 23.26,Mn = 0.0,Fe = 23.26,Co = 23.26,Ni = 23.26,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 860.0,UTS = 1050.0,Elongation = 48.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 847.0,UTS = 1121.0,Elongation = 51.0,] ##'}, {'Q': '## [C = 0.0,Al = 3.125,V = 0.0,Cr = 31.25,Mn = 0.0,Fe = 0.0,Co = 31.25,Ni = 31.25,Cu = 0.0,Mo = 3.125,Ti = 0.0,] ##', 'A': '## [YS = 842.0,UTS = 1201.0,Elongation = 38.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 33.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 787.0,UTS = 1245.0,Elongation = 43.4,] ##'}, {'Q': '## [C = 0.0,Al = 3.0,V = 32.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 783.0,UTS = 1277.0,Elongation = 42.6,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 23.0,Mn = 31.0,Fe = 0.0,Co = 23.0,Ni = 23.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 740.0,UTS = 1260.0,Elongation = 43.9,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 31.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 7.0,Ti = 0.0,] ##', 'A': '## [YS = 652.0,UTS = 1253.0,Elongation = 44.0,] ##'}, {'Q': '## [C = 2.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 17.5,Ni = 10.0,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##', 'A': '## [YS = 617.0,UTS = 1057.0,Elongation = 52.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 33.3333,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 615.8,UTS = 1129.8,Elongation = 52.8,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.34,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.33,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 612.0,UTS = 1034.0,Elongation = 57.3,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 601.0,UTS = 992.0,Elongation = 64.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 10.0,Fe = 40.0,Co = 20.0,Ni = 10.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 589.0,UTS = 865.0,Elongation = 69.1,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 10.0,Co = 50.0,Ni = 10.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##', 'A': '## [YS = 576.0,UTS = 1133.0,Elongation = 60.6,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 32.34,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.33,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##', 'A': '## [YS = 535.0,UTS = 963.0,Elongation = 73.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 15.0,Co = 40.0,Ni = 15.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##', 'A': '## [YS = 461.0,UTS = 988.0,Elongation = 91.4,] ##'}, {'Q': '## [C = 0.93,Al = 0.0,V = 0.0,Cr = 19.814,Mn = 19.814,Fe = 19.814,Co = 19.814,Ni = 19.814,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 401.0,UTS = 1147.0,Elongation = 64.0,] ##'}, {'Q': '## [C = 1.1,Al = 7.42,V = 0.0,Cr = 5.93,Mn = 34.42,Fe = 39.96,Co = 0.0,Ni = 11.17,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 355.0,UTS = 1174.0,Elongation = 49.5,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 20.0,Fe = 20.0,Co = 20.0,Ni = 20.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 253.0,UTS = 1062.0,Elongation = 77.0,] ##'}, {'Q': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 15.0,Fe = 15.0,Co = 35.0,Ni = 15.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'A': '## [YS = 231.0,UTS = 688.0,Elongation = 96.0,] ##'}]"}]
+
+3. K3:
+
+C: C content increases hardness and strength, enhancing YS and UTS. Still, excessive amounts may reduce elongation, compromising toughness and deformability.
+Al: Increasing Al content generally enhances YS and UTS but reduces elongation, indicating a trade-off between strength and ductility.
+V: Increasing V content generally enhances YS and UTS but reduces elongation in HEA alloys.
+Cr: Higher Cr content generally decreases elongation while increasing YS and UTS, enhancing strength but reducing ductility.
+Mn: Mn presence generally decreases yield strength, increases ultimate tensile strength, and enhances elongation, improving ductility and toughness in HEA alloys.
+Fe: Increasing Fe content generally enhances yield strength and ultimate tensile strength but decreases elongation, indicating a trade-off between strength and ductility in HEA alloys.
+Co: Higher Co content generally increases yield and tensile strengths, but decreases elongation, indicating a trade-off between strength and ductility.
+Ni: Higher Ni content generally increases yield strength and ultimate tensile strength while reducing elongation, indicating enhanced strength but decreased ductility in HEA alloys.
+Cu: Cu addition improves elongation but may reduce yield and ultimate tensile strength in HEAs.
+Mo: Higher Mo content in HEA alloys generally increases yield strength and ultimate tensile strength but reduces elongation.
+Ti: Titanium (Ti) generally enhances the yield strength and ultimate tensile strength while reducing elongation, improving load-bearing capacity and material performance under extreme conditions at the expense of toughness.
