@@ -10,13 +10,15 @@
 
 
 # **LLM evaluation**
+*Tips: Iteration_LLM.ipynb includes the LLM part process and error analysis with iteration*
+
 1. LLM_coding_prompt1_HEA.txt is the *Coding and Prompt* for generating Knowledge book of HEA (Generate HEA_knowledge2_0.txt)
 
 2. LLM_coding_prompt1_AL.txt is the *Coding and Prompt* for generating Knowledge book of AL (Generate AL_knowledge2_0.txt)
 
-3. LLM_coding_pompt2_HEA.txt is *Coding and Prompt* for evaluate the candidate C1 of HEA (C1 is the expanded candidate training data introducted in LLM_iteration.ipynb)
+3. LLM_coding_pompt2_HEA.txt is *Coding and Prompt* for evaluate the candidate C1 of HEA (C1 is the expanded candidate training data introducted in Iteration_LLM.ipynb)
 
-4. LLM_coding_pompt2_AL.txt is *Coding and Prompt* for evaluate the candidate C2 of HEA (C2 is the expanded candidate training data introducted in LLM_iteration.ipynb)
+4. LLM_coding_pompt2_AL.txt is *Coding and Prompt* for evaluate the candidate C2 of HEA (C2 is the expanded candidate training data introducted in Iteration_LLM.ipynb)
 
 5. LLM_coding_pompt3_HEA.txt is *Coding and Prompt* for updating knowledge book of HEA (Genertae HEA_knowledge2_1.txt-HEA_knowledge2_10.txt)
 
