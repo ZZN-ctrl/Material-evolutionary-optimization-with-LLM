@@ -1,0 +1,125 @@
+Coding and Prompt for updating knowledge book of AL
+
+1. Coding
+	
+   def examples_generator(self):
+        examples = []
+        AL_D = ['C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.pareto_X_AL)[0]):
+            AL = {}
+            StrAL = '['
+            for j in range(len(AL_D)):
+                StrAL += f'{AL_D[j]} = {self.pareto_X_AL[i, j]}'
+                if j <= len(AL_D) - 1:
+                    StrAL += ','
+            StrAL += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.pareto_Y_AL[i, j]}'
+                if j <= len(Objective_name) - 1:
+                    StrObj += ','
+            StrObj += ']'
+
+            AL['Composition'] = '## ' + StrAL + ' ##'
+            AL['Ground truth fitness values'] = '## ' + StrObj + ' ##'
+            examples.append(AL)
+        return examples
+
+    def Test_data_generator(self):
+        Test_data = []
+        AL_D = ['C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.New_AL_X)[0]):
+            AL = {}
+            StrAL = '['
+            for j in range(len(AL_D)):
+                StrAL += f'{AL_D[j]} = {self.New_AL_X[i, j]}'
+                if j <= len(AL_D) - 1:
+                    StrAL += ','
+            StrAL += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.New_AL_Y[i, j]}'
+                if j <= len(Objective_name) - 1:
+                    StrObj += ','
+            StrObj += ']'
+
+            StrPreObj = '['
+            for j in range(len(Objective_name)):
+                StrPreObj += f'{Objective_name[j]} = {self.LLM_prediction_value[i, j]}'
+                if j <= len(Objective_name) - 1:
+                    StrPreObj += ','
+            StrPreObj += ']'
+            AL['Composition'] = '## ' + StrAL + ' ##'
+            AL['Ground truth fitness values'] = '## ' + StrObj + ' ##'
+            AL['LLM-predicted fitness values'] = '## ' + StrPreObj + ' ##'
+            Test_data.append(AL)
+        return Test_data
+
+    def prompt_template_generator(self):
+        examples = self.examples_generator()
+        Test_data = self.Test_data_generator()
+        prefix = f"""
+           The following is offline al alloy data composed of compositions and fitness values.
+
+           The fitness values include:
+           - Yield strength (YS): Enhancing load-bearing capacity.
+           - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.
+           - Elongation: Ensuring toughness and deformability.
+
+           Composition analysis:
+           {self.AL_knowledge}
+
+           Your task:
+           1. Gather relevant knowledge about Al alloys.
+           2. Combine knowledge about Al and offline Al alloy data to compute the correlation between each component and each fitness value.
+           3. Compute the SHAP values using the offline Al alloy data.
+           4. Perform multiple regression analysis and combine knowledge about Al alloys to evaluate its impact on each fitness value.
+           5. Use correlation values, SHAP values, and combine knowledge about Al alloys to further quantify every component's contribution.
+           6. **Update the composition analysis** based on the offline Al alloy data and test dataset (Test dataset includes test data, ground truth fitness values, and LLM-predicted fitness values):
+               - Assess the consistency of LLM predictions with the actual values.
+               - Identify discrepancies and refine correlation and SHAP value estimations.
+               - Adjust regression analysis results by incorporating insights from test performance.
+               - Reassess the quantitative impact of each component considering test set predictions.
+               - Test dataset: {Test_data}
+
+           Your response **must** contain:
+            1. The **quantitative and qualitative analysis of every component's impact on fitness values to **update the composition analysis**, including **specific SHAP values**, strictly within **400 words**. **Do not** generate any additional statements or explanations.
+               Format example--[composition]: [composition] (degree) positively/negatively impacts YS, (degree) positively/negatively impacts UTS, and (degree) positively/negatively affects elongation. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).
+
+            2. Provide considerations for subsequent **LLM regression process** based on test data errors within **100 words**. **Do not** generate any additional statements or explanations.
+        """
+
+        prefix += f'{examples}'
+
+        return prefix
+
+    def K_gnerates(self):
+        FewShotprompt = self.prompt_template_generator()
+        message = []
+        message.append({"role": "system", "content": "You are a expert in the Al alloy research"})
+        message.append({"role": "user", "content": FewShotprompt})
+        client = OpenAI(
+            base_url="***********************",
+            api_key="*********************"
+        )
+        while True:
+            start_time = time.time()
+            self.rate_limiter.add_request(request_text=FewShotprompt, current_time=start_time)
+            resp = client.chat.completions.create(
+                model='gpt-4o',
+                messages=message,
+                temperature=0.8,
+            )
+
+
+
+2. String
+
+Out[1]: 
+[{'role': 'system', 'content': 'You are a expert in the Al alloy research'},
+ {'role': 'user',
+  'content': "\n           The following is offline al alloy data composed of compositions and fitness values.\n\n           The fitness values include:\n           - Yield strength (YS): Enhancing load-bearing capacity.\n           - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.\n           - Elongation: Ensuring toughness and deformability.\n\n           Composition analysis:\n           [Al]: YS decreases with higher Al content; UTS and elongation moderately impacted. Correlation: YS (-0.65), UTS (-0.48), elongation (-0.33). SHAP: YS (-0.45), UTS (-0.32), elongation (-0.25).\n[Co]: Minimal effect on YS and UTS; slight increase in elongation. Correlation: YS (-0.02), UTS (-0.03), elongation (0.15). SHAP: YS (0.01), UTS (0.02), elongation (0.10).\n[Cr]: Enhances YS, UTS, and elongation. Correlation: YS (0.4), UTS (0.52), elongation (0.48). SHAP: YS (0.38), UTS (0.45), elongation (0.42).\n[Cu]: Increases YS and UTS; reduces elongation. Correlation: YS (0.57), UTS (0.62), elongation (-0.35). SHAP: YS (0.50), UTS (0.55), elongation (-0.30).\n[Fe]: Increases YS and UTS; reduces elongation. Correlation: YS (0.45), UTS (0.41), elongation (-0.28). SHAP: YS (0.35), UTS (0.30), elongation (-0.22).\n[Mg]: Enhances YS and UTS; slightly reduces elongation. Correlation: YS (0.47), UTS (0.51), elongation (-0.15). SHAP: YS (0.40), UTS (0.45), elongation (-0.10).\n[Mn]: Boosts YS and UTS; moderately enhances elongation. Correlation: YS (0.33), UTS (0.38), elongation (0.36). SHAP: YS (0.25), UTS (0.30), elongation (0.30).\n[Ni]: Negligible impact on YS, UTS, and elongation. Correlation: YS (0.01), UTS (0.02), elongation (0.01). SHAP: YS (0.00), UTS (0.01), elongation (0.00).\n[Si]: Reduces YS and UTS; slightly enhances elongation. Correlation: YS (-0.30), UTS (-0.28), elongation (0.18). SHAP: YS (-0.22), UTS (-0.20), elongation (0.15).\n[Ti]: Increases YS and UTS; minimal effect on elongation. Correlation: YS (0.29), UTS (0.25), elongation (0.05). SHAP: YS (0.20), UTS (0.18), elongation (0.03).\n[V]: Enhances YS and UTS; slightly reduces elongation. Correlation: YS (0.36), UTS (0.30), elongation (-0.12). SHAP: YS (0.28), UTS (0.25), elongation (-0.08).\n[Zn]: Improves YS and UTS; slightly decreases elongation. Correlation: YS (0.39), UTS (0.42), elongation (-0.20). SHAP: YS (0.32), UTS (0.35), elongation (-0.15).\n\n           Your task:\n           1. Gather relevant knowledge about Al alloys.\n           2. Combine knowledge about Al and offline Al alloy data to compute the correlation between each component and each fitness value.\n           3. Compute the SHAP values using the offline Al alloy data.\n           4. Perform multiple regression analysis and combine knowledge about Al alloys to evaluate its impact on each fitness value.\n           5. Use correlation values, SHAP values, and combine knowledge about Al alloys to further quantify every component's contribution.\n           6. **Update the composition analysis** based on the offline Al alloy data and test dataset (Test dataset includes test data, ground truth fitness values, and LLM-predicted fitness values):\n               - Assess the consistency of LLM predictions with the actual values.\n               - Identify discrepancies and refine correlation and SHAP value estimations.\n               - Adjust regression analysis results by incorporating insights from test performance.\n               - Reassess the quantitative impact of each component considering test set predictions.\n               - Test dataset: [{'Composition': '## [C = 76.8103333,Al = 0.0,V = 0.0,Cr = 0.107564496,Mn = 0.122397591,Fe = 1.23741169,Co = 0.149301857,Ni = 0.0,Cu = 21.4169526,Mo = 0.114238092,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 139.0,UTS = 139.0,Elongation = 0.5,] ##', 'LLM-predicted fitness values': '## [YS = 347.2,UTS = 485.6,Elongation = 18.3,] ##'}, {'Composition': '## [C = 95.9578268,Al = 0.0,V = 0.077965441,Cr = 0.02126489,Mn = 0.096789284,Fe = 3.44705068,Co = 0.122983923,Ni = 0.0,Cu = 0.192455096,Mo = 0.042345445,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 166.0,UTS = 232.5,Elongation = 14.5,] ##', 'LLM-predicted fitness values': '## [YS = 481.2,UTS = 540.6,Elongation = 17.0,] ##'}]\n\n           Your response **must** contain:\n            1. The **quantitative and qualitative analysis of every component's impact on fitness values to **update the composition analysis**, including **specific SHAP values**, strictly within **400 words**. **Do not** generate any additional statements or explanations.\n               Format example--[composition]: [composition] (degree) positively/negatively impacts YS, (degree) positively/negatively impacts UTS, and (degree) positively/negatively affects elongation. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).\n\n            2. Provide considerations for subsequent **LLM regression process** based on test data errors within **100 words**. **Do not** generate any additional statements or explanations.\n        [{'Composition': '## [C = 99.99516825,Al = 0.0,V = 0.0,Cr = 0.0,Mn = 0.004831755,Fe = 0.0,Co = 0.0,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 10.3421355,UTS = 44.8159205,Elongation = 50.0,] ##'}, {'Composition': '## [C = 99.85524211,Al = 0.0,V = 0.0,Cr = 0.021241678,Mn = 0.004834179,Fe = 0.0,Co = 0.0,Ni = 0.0,Cu = 0.09612246,Mo = 0.02255957,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 20.684271,UTS = 62.052813,Elongation = 45.0,] ##'}, {'Composition': '## [C = 99.75860178,Al = 0.0,V = 0.0,Cr = 0.0,Mn = 0.145175953,Fe = 0.0,Co = 0.0,Ni = 0.0,Cu = 0.096222263,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 27.579028,UTS = 68.94757,Elongation = 43.0,] ##'}, {'Composition': '## [C = 99.73819946,Al = 0.0,V = 0.0,Cr = 0.010635051,Mn = 0.096812764,Fe = 0.0,Co = 0.012301402,Ni = 0.0,Cu = 0.120313662,Mo = 0.00847117,Ti = 0.013266491,] ##', 'Ground truth fitness values': '## [YS = 35.0,UTS = 80.0,Elongation = 38.05,] ##'}, {'Composition': '## [C = 99.71869289,Al = 0.0,V = 0.0,Cr = 0.021276588,Mn = 0.009684248,Fe = 0.033376888,Co = 0.014766184,Ni = 0.0,Cu = 0.019256087,Mo = 0.011298323,Ti = 0.15924644,] ##', 'Ground truth fitness values': '## [YS = 34.473785,UTS = 75.842327,Elongation = 40.0,] ##'}, {'Composition': '## [C = 94.15404545,Al = 0.0,V = 0.051646844,Cr = 0.0,Mn = 0.0,Fe = 5.745426563,Co = 0.048881144,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 151.684654,UTS = 289.579794,Elongation = 35.0,] ##'}, {'Composition': '## [C = 96.1962159,Al = 0.0,V = 0.0,Cr = 3.054439864,Mn = 0.304436122,Fe = 0.011658256,Co = 0.103153988,Ni = 0.0,Cu = 0.0,Mo = 0.035517654,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 140.0,UTS = 350.0,Elongation = 26.0,] ##'}, {'Composition': '## [C = 95.98653679,Al = 0.0,V = 0.026694261,Cr = 1.856604405,Mn = 0.05965071,Fe = 1.599009615,Co = 0.290544935,Ni = 0.0,Cu = 0.059304515,Mo = 0.057993919,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 306.0,UTS = 434.0,Elongation = 24.0,] ##'}, {'Composition': '## [C = 95.98653679,Al = 0.0,V = 0.026694261,Cr = 1.856604405,Mn = 0.05965071,Fe = 1.599009615,Co = 0.290544935,Ni = 0.0,Cu = 0.059304515,Mo = 0.057993919,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 306.0,UTS = 434.0,Elongation = 24.0,] ##'}, {'Composition': '## [C = 95.98653679,Al = 0.0,V = 0.026694261,Cr = 1.856604405,Mn = 0.05965071,Fe = 1.599009615,Co = 0.290544935,Ni = 0.0,Cu = 0.059304515,Mo = 0.057993919,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 306.0,UTS = 434.0,Elongation = 24.0,] ##'}, {'Composition': '## [C = 95.16543231,Al = 0.0,V = 0.053531423,Cr = 1.927276471,Mn = 0.249209888,Fe = 1.71781027,Co = 0.30398882,Ni = 0.0,Cu = 0.495527094,Mo = 0.087223721,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 324.0,UTS = 428.0,Elongation = 21.0,] ##'}, {'Composition': '## [C = 95.16543231,Al = 0.0,V = 0.053531423,Cr = 1.927276471,Mn = 0.249209888,Fe = 1.71781027,Co = 0.30398882,Ni = 0.0,Cu = 0.495527094,Mo = 0.087223721,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 324.0,UTS = 428.0,Elongation = 21.0,] ##'}, {'Composition': '## [C = 95.16543231,Al = 0.0,V = 0.053531423,Cr = 1.927276471,Mn = 0.249209888,Fe = 1.71781027,Co = 0.30398882,Ni = 0.0,Cu = 0.495527094,Mo = 0.087223721,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 324.0,UTS = 428.0,Elongation = 21.0,] ##'}, {'Composition': '## [C = 98.58558767,Al = 0.0,V = 0.0,Cr = 1.07662799,Mn = 0.0,Fe = 0.337784335,Co = 0.0,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 165.474168,UTS = 296.474551,Elongation = 27.0,] ##'}, {'Composition': '## [C = 94.02205073,Al = 0.0,V = 0.102931267,Cr = 0.678215484,Mn = 0.040352475,Fe = 2.596072884,Co = 0.030763981,Ni = 0.0,Cu = 0.020059141,Mo = 0.011769507,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 461.5,UTS = 569.1,Elongation = 20.0,] ##'}, {'Composition': '## [C = 98.76719984,Al = 0.0,V = 0.0,Cr = 0.008519331,Mn = 0.12117679,Fe = 0.7684528,Co = 0.221719068,Ni = 0.0,Cu = 0.096378813,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 189.0,UTS = 303.0,Elongation = 24.4,] ##'}, {'Composition': '## [C = 97.89452407,Al = 0.0,V = 0.0,Cr = 0.093664773,Mn = 0.169560844,Fe = 1.224443869,Co = 0.059094882,Ni = 0.0,Cu = 0.558711557,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 235.0,UTS = 283.0,Elongation = 26.0,] ##'}, {'Composition': '## [C = 97.89452407,Al = 0.0,V = 0.0,Cr = 0.093664773,Mn = 0.169560844,Fe = 1.224443869,Co = 0.059094882,Ni = 0.0,Cu = 0.558711557,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 235.0,UTS = 283.0,Elongation = 26.0,] ##'}, {'Composition': '## [C = 97.53282563,Al = 0.0,V = 0.182501129,Cr = 0.149330359,Mn = 0.077679061,Fe = 1.19359347,Co = 0.074026351,Ni = 0.003233531,Cu = 0.75297529,Mo = 0.016425934,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 206.7,UTS = 295.0,Elongation = 29.7,] ##'}, {'Composition': '## [C = 97.53282563,Al = 0.0,V = 0.182501129,Cr = 0.149330359,Mn = 0.077679061,Fe = 1.19359347,Co = 0.074026351,Ni = 0.003233531,Cu = 0.75297529,Mo = 0.016425934,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 163.2,UTS = 270.5,Elongation = 33.5,] ##'}, {'Composition': '## [C = 96.06681499,Al = 0.0,V = 0.0,Cr = 1.919521367,Mn = 0.0,Fe = 1.710898031,Co = 0.302765609,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 440.0,UTS = 704.0,Elongation = 3.7,] ##'}, {'Composition': '## [C = 94.243963,Al = 0.0,V = 0.102736158,Cr = 0.681354287,Mn = 0.003524149,Fe = 2.544881388,Co = 0.0,Ni = 0.0,Cu = 0.009009503,Mo = 0.011747198,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 496.0,UTS = 551.0,Elongation = 16.23,] ##'}, {'Composition': '## [C = 94.243963,Al = 0.0,V = 0.102736158,Cr = 0.681354287,Mn = 0.003524149,Fe = 2.544881388,Co = 0.0,Ni = 0.0,Cu = 0.009009503,Mo = 0.011747198,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 496.0,UTS = 551.0,Elongation = 16.23,] ##'}, {'Composition': '## [C = 93.50756387,Al = 0.0,V = 0.0,Cr = 0.980875738,Mn = 0.0,Fe = 2.73937676,Co = 0.0,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 535.0,UTS = 610.0,Elongation = 15.6,] ##'}, {'Composition': '## [C = 93.50756387,Al = 0.0,V = 0.0,Cr = 0.980875738,Mn = 0.0,Fe = 2.73937676,Co = 0.0,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 535.0,UTS = 610.0,Elongation = 15.6,] ##'}, {'Composition': '## [C = 93.50756387,Al = 0.0,V = 0.0,Cr = 0.980875738,Mn = 0.0,Fe = 2.73937676,Co = 0.0,Ni = 0.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 535.0,UTS = 610.0,Elongation = 15.6,] ##'}, {'Composition': '## [C = 92.88296375,Al = 0.0,V = 0.103545675,Cr = 0.695641546,Mn = 0.004566751,Fe = 3.276120188,Co = 0.0,Ni = 0.0,Cu = 0.010089438,Mo = 0.011839761,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 583.0,UTS = 627.0,Elongation = 15.1,] ##'}, {'Composition': '## [C = 92.88296375,Al = 0.0,V = 0.103545675,Cr = 0.695641546,Mn = 0.004566751,Fe = 3.276120188,Co = 0.0,Ni = 0.0,Cu = 0.010089438,Mo = 0.011839761,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 583.0,UTS = 627.0,Elongation = 15.1,] ##'}, {'Composition': '## [C = 92.62983176,Al = 0.0,V = 0.104004348,Cr = 0.662891058,Mn = 0.00458698,Fe = 3.208659267,Co = 0.0,Ni = 0.0,Cu = 0.010134131,Mo = 0.011892207,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 614.0,UTS = 654.0,Elongation = 14.8,] ##'}, {'Composition': '## [C = 92.62983176,Al = 0.0,V = 0.104004348,Cr = 0.662891058,Mn = 0.00458698,Fe = 3.208659267,Co = 0.0,Ni = 0.0,Cu = 0.010134131,Mo = 0.011892207,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 614.0,UTS = 654.0,Elongation = 14.8,] ##'}, {'Composition': '## [C = 91.88037681,Al = 0.0,V = 0.0,Cr = 1.132760555,Mn = 0.025779354,Fe = 3.080094562,Co = 0.0,Ni = 0.0,Cu = 0.051259477,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 634.0,UTS = 677.0,Elongation = 12.0,] ##'}, {'Composition': '## [C = 91.88037681,Al = 0.0,V = 0.0,Cr = 1.132760555,Mn = 0.025779354,Fe = 3.080094562,Co = 0.0,Ni = 0.0,Cu = 0.051259477,Mo = 0.0,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 634.0,UTS = 677.0,Elongation = 12.0,] ##'}, {'Composition': '## [C = 76.8103333,Al = 0.0,V = 0.0,Cr = 0.107564496,Mn = 0.122397591,Fe = 1.23741169,Co = 0.149301857,Ni = 0.0,Cu = 21.4169526,Mo = 0.114238092,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 139.0,UTS = 139.0,Elongation = 0.5,] ##'}, {'Composition': '## [C = 95.9578268,Al = 0.0,V = 0.077965441,Cr = 0.02126489,Mn = 0.096789284,Fe = 3.44705068,Co = 0.122983923,Ni = 0.0,Cu = 0.192455096,Mo = 0.042345445,Ti = 0.0,] ##', 'Ground truth fitness values': '## [YS = 166.0,UTS = 232.5,Elongation = 14.5,] ##'}]"}]

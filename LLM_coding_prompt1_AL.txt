@@ -1,0 +1,82 @@
+Coding and Prompt for generate Knowledge book of HEA (Generate AL_knowledge2_0.txt)
+
+1. Coding:
+
+ def examples_generator(self):
+        examples = []
+        AL_D  = ['Al', 'Co', 'Cr', 'Cu', 'Fe', 'Mg', 'Mn', 'Ni', 'Si', 'Ti', 'V', 'Zn']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.datax_AL)[0]):
+            AL = {}
+            StrAL = '['
+            for j in range(len(AL_D)):
+                StrAL += f'{AL_D[j]} = {self.datax_AL[i,j]}'
+                if j <= len(AL_D)-1:
+                    StrAL += ','
+            StrAL += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.datay_AL[i,j]}'
+                if j <= len(Objective_name)-1:
+                    StrObj += ','
+            StrObj += ']'
+
+            AL['Q'] = '## ' + StrAL + ' ##'
+            AL['A'] = '## ' + StrAL + ' ##'
+            examples.append(AL)
+        return examples
+
+    def prompt_template_generator(self):
+        examples = self.examples_generator()
+
+        prefix = f"""
+        The following is offline Al alloy data composed of compositions and fitness values.
+        The fitness values include:
+        - Yield strength (YS): Enhancing load-bearing capacity.
+        - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.
+        - Elongation: Ensuring toughness and deformability.
+
+        Your task:
+        1. Gather relevant knowledge about Al alloys.
+        2. Compute the correlation between each composition and each fitness value.
+        3. Perform multiple regression analysis and combine knowledge about Al alloys to evaluate its impact on each fitness value.
+        4. Use SHAP values and combine knowledge about Al alloys to further quantify every compositions' contribution.
+
+        Your response **must** contain only the **quantitative and qualitative analysis of every components' impact on fitness values including *specific SHAP value* **, strictly within **500 words**. **Do not** generate any additional statements or explanations.
+        Compositions: 'Al', 'Co', 'Cr', 'Cu', 'Fe', 'Mg', 'Mn', 'Ni', 'Si', 'Ti', 'V', 'Zn'
+        Output format example--[composition]: [qualitative analysis to 'YS', 'UTS', 'Elongation']. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).
+        """
+
+        prefix += f'{examples}'
+
+        return prefix
+
+    def K_gnerates(self):
+        FewShotprompt = self.prompt_template_generator()
+        message = []
+        message.append({"role": "system","content": "You are a expert in the Al alloy research"})
+        message.append({"role": "user", "content": FewShotprompt})
+        client = OpenAI(
+            base_url="https://api.gpts.vin/v1",
+            api_key="sk-dRLkYviiOkPwiPIRPmkqjlW1X8DETPCZL3o1Vl7b4Cj4W3Hi"
+        )
+        while True:
+            start_time = time.time()
+            self.rate_limiter.add_request(request_text=FewShotprompt, current_time=start_time)
+            resp = client.chat.completions.create(
+                model='gpt-4o',
+                messages=message,
+                temperature=0.8,
+            )
+
+
+
+
+
+2. String:
+
+Out[1]: 
+[{'role': 'system', 'content': 'You are a expert in the Al alloy research'},
+ {'role': 'user',
+  'content': "\n        The following is offline Al alloy data composed of compositions and fitness values.\n        The fitness values include:\n        - Yield strength (YS): Enhancing load-bearing capacity.\n        - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.\n        - Elongation: Ensuring toughness and deformability.\n\n        Your task:\n        1. Gather relevant knowledge about Al alloys.\n        2. Compute the correlation between each composition and each fitness value.\n        3. Perform multiple regression analysis and combine knowledge about Al alloys to evaluate its impact on each fitness value.\n        4. Use SHAP values and combine knowledge about Al alloys to further quantify every compositions' contribution.\n\n        Your response **must** contain only the **quantitative and qualitative analysis of every components' impact on fitness values including *specific SHAP value* **, strictly within **500 words**. **Do not** generate any additional statements or explanations.\n        Compositions: 'Al', 'Co', 'Cr', 'Cu', 'Fe', 'Mg', 'Mn', 'Ni', 'Si', 'Ti', 'V', 'Zn'\n        Output format example--[composition]: [qualitative analysis to 'YS', 'UTS', 'Elongation']. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).\n        [{'Q': '## [Al = 99.99516825,Co = 0.0,Cr = 0.0,Cu = 0.0,Fe = 0.004831755,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 99.99516825,Co = 0.0,Cr = 0.0,Cu = 0.0,Fe = 0.004831755,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 99.85524211,Co = 0.0,Cr = 0.0,Cu = 0.021241678,Fe = 0.004834179,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.09612246,Ti = 0.02255957,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 99.85524211,Co = 0.0,Cr = 0.0,Cu = 0.021241678,Fe = 0.004834179,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.09612246,Ti = 0.02255957,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 99.75860178,Co = 0.0,Cr = 0.0,Cu = 0.0,Fe = 0.145175953,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.096222263,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 99.75860178,Co = 0.0,Cr = 0.0,Cu = 0.0,Fe = 0.145175953,Mg = 0.0,Mn = 0.0,Ni = 0.0,Si = 0.096222263,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 99.73819946,Co = 0.0,Cr = 0.0,Cu = 0.010635051,Fe = 0.096812764,Mg = 0.0,Mn = 0.012301402,Ni = 0.0,Si = 0.120313662,Ti = 0.00847117,V = 0.013266491,Zn = 0.0,] ##', 'A': '## [Al = 99.73819946,Co = 0.0,Cr = 0.0,Cu = 0.010635051,Fe = 0.096812764,Mg = 0.0,Mn = 0.012301402,Ni = 0.0,Si = 0.120313662,Ti = 0.00847117,V = 0.013266491,Zn = 0.0,] ##'}, {'Q': '## [Al = 99.71869289,Co = 0.0,Cr = 0.0,Cu = 0.021276588,Fe = 0.009684248,Mg = 0.033376888,Mn = 0.014766184,Ni = 0.0,Si = 0.019256087,Ti = 0.011298323,V = 0.15924644,Zn = 0.012402349,] ##', 'A': '## [Al = 99.71869289,Co = 0.0,Cr = 0.0,Cu = 0.021276588,Fe = 0.009684248,Mg = 0.033376888,Mn = 0.014766184,Ni = 0.0,Si = 0.019256087,Ti = 0.011298323,V = 0.15924644,Zn = 0.012402349,] ##'}, {'Q': '## [Al = 94.15404545,Co = 0.0,Cr = 0.051646844,Cu = 0.0,Fe = 0.0,Mg = 5.745426563,Mn = 0.048881144,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 94.15404545,Co = 0.0,Cr = 0.051646844,Cu = 0.0,Fe = 0.0,Mg = 5.745426563,Mn = 0.048881144,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 96.1962159,Co = 0.0,Cr = 0.0,Cu = 3.054439864,Fe = 0.304436122,Mg = 0.011658256,Mn = 0.103153988,Ni = 0.0,Si = 0.0,Ti = 0.035517654,V = 0.0,Zn = 0.294578217,] ##', 'A': '## [Al = 96.1962159,Co = 0.0,Cr = 0.0,Cu = 3.054439864,Fe = 0.304436122,Mg = 0.011658256,Mn = 0.103153988,Ni = 0.0,Si = 0.0,Ti = 0.035517654,V = 0.0,Zn = 0.294578217,] ##'}, {'Q': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##', 'A': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##'}, {'Q': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##', 'A': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##'}, {'Q': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##', 'A': '## [Al = 95.98653679,Co = 0.0,Cr = 0.026694261,Cu = 1.856604405,Fe = 0.05965071,Mg = 1.599009615,Mn = 0.290544935,Ni = 0.0,Si = 0.059304515,Ti = 0.057993919,V = 0.0,Zn = 0.063660847,] ##'}, {'Q': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 95.16543231,Co = 0.0,Cr = 0.053531423,Cu = 1.927276471,Fe = 0.249209888,Mg = 1.71781027,Mn = 0.30398882,Ni = 0.0,Si = 0.495527094,Ti = 0.087223721,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 98.58558767,Co = 0.0,Cr = 0.0,Cu = 1.07662799,Fe = 0.0,Mg = 0.337784335,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 98.58558767,Co = 0.0,Cr = 0.0,Cu = 1.07662799,Fe = 0.0,Mg = 0.337784335,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 94.02205073,Co = 0.0,Cr = 0.102931267,Cu = 0.678215484,Fe = 0.040352475,Mg = 2.596072884,Mn = 0.030763981,Ni = 0.0,Si = 0.020059141,Ti = 0.011769507,V = 0.0,Zn = 2.497784534,] ##', 'A': '## [Al = 94.02205073,Co = 0.0,Cr = 0.102931267,Cu = 0.678215484,Fe = 0.040352475,Mg = 2.596072884,Mn = 0.030763981,Ni = 0.0,Si = 0.020059141,Ti = 0.011769507,V = 0.0,Zn = 2.497784534,] ##'}, {'Q': '## [Al = 98.76719984,Co = 0.0,Cr = 0.0,Cu = 0.008519331,Fe = 0.12117679,Mg = 0.7684528,Mn = 0.221719068,Ni = 0.0,Si = 0.096378813,Ti = 0.0,V = 0.0,Zn = 0.016553362,] ##', 'A': '## [Al = 98.76719984,Co = 0.0,Cr = 0.0,Cu = 0.008519331,Fe = 0.12117679,Mg = 0.7684528,Mn = 0.221719068,Ni = 0.0,Si = 0.096378813,Ti = 0.0,V = 0.0,Zn = 0.016553362,] ##'}, {'Q': '## [Al = 97.89452407,Co = 0.0,Cr = 0.0,Cu = 0.093664773,Fe = 0.169560844,Mg = 1.224443869,Mn = 0.059094882,Ni = 0.0,Si = 0.558711557,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 97.89452407,Co = 0.0,Cr = 0.0,Cu = 0.093664773,Fe = 0.169560844,Mg = 1.224443869,Mn = 0.059094882,Ni = 0.0,Si = 0.558711557,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 97.89452407,Co = 0.0,Cr = 0.0,Cu = 0.093664773,Fe = 0.169560844,Mg = 1.224443869,Mn = 0.059094882,Ni = 0.0,Si = 0.558711557,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 97.89452407,Co = 0.0,Cr = 0.0,Cu = 0.093664773,Fe = 0.169560844,Mg = 1.224443869,Mn = 0.059094882,Ni = 0.0,Si = 0.558711557,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 97.53282563,Co = 0.0,Cr = 0.182501129,Cu = 0.149330359,Fe = 0.077679061,Mg = 1.19359347,Mn = 0.074026351,Ni = 0.003233531,Si = 0.75297529,Ti = 0.016425934,V = 0.0,Zn = 0.01740925,] ##', 'A': '## [Al = 97.53282563,Co = 0.0,Cr = 0.182501129,Cu = 0.149330359,Fe = 0.077679061,Mg = 1.19359347,Mn = 0.074026351,Ni = 0.003233531,Si = 0.75297529,Ti = 0.016425934,V = 0.0,Zn = 0.01740925,] ##'}, {'Q': '## [Al = 97.53282563,Co = 0.0,Cr = 0.182501129,Cu = 0.149330359,Fe = 0.077679061,Mg = 1.19359347,Mn = 0.074026351,Ni = 0.003233531,Si = 0.75297529,Ti = 0.016425934,V = 0.0,Zn = 0.01740925,] ##', 'A': '## [Al = 97.53282563,Co = 0.0,Cr = 0.182501129,Cu = 0.149330359,Fe = 0.077679061,Mg = 1.19359347,Mn = 0.074026351,Ni = 0.003233531,Si = 0.75297529,Ti = 0.016425934,V = 0.0,Zn = 0.01740925,] ##'}, {'Q': '## [Al = 96.06681499,Co = 0.0,Cr = 0.0,Cu = 1.919521367,Fe = 0.0,Mg = 1.710898031,Mn = 0.302765609,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##', 'A': '## [Al = 96.06681499,Co = 0.0,Cr = 0.0,Cu = 1.919521367,Fe = 0.0,Mg = 1.710898031,Mn = 0.302765609,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 0.0,] ##'}, {'Q': '## [Al = 94.243963,Co = 0.0,Cr = 0.102736158,Cu = 0.681354287,Fe = 0.003524149,Mg = 2.544881388,Mn = 0.0,Ni = 0.0,Si = 0.009009503,Ti = 0.011747198,V = 0.0,Zn = 2.402784316,] ##', 'A': '## [Al = 94.243963,Co = 0.0,Cr = 0.102736158,Cu = 0.681354287,Fe = 0.003524149,Mg = 2.544881388,Mn = 0.0,Ni = 0.0,Si = 0.009009503,Ti = 0.011747198,V = 0.0,Zn = 2.402784316,] ##'}, {'Q': '## [Al = 94.243963,Co = 0.0,Cr = 0.102736158,Cu = 0.681354287,Fe = 0.003524149,Mg = 2.544881388,Mn = 0.0,Ni = 0.0,Si = 0.009009503,Ti = 0.011747198,V = 0.0,Zn = 2.402784316,] ##', 'A': '## [Al = 94.243963,Co = 0.0,Cr = 0.102736158,Cu = 0.681354287,Fe = 0.003524149,Mg = 2.544881388,Mn = 0.0,Ni = 0.0,Si = 0.009009503,Ti = 0.011747198,V = 0.0,Zn = 2.402784316,] ##'}, {'Q': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##', 'A': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##'}, {'Q': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##', 'A': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##'}, {'Q': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##', 'A': '## [Al = 93.50756387,Co = 0.0,Cr = 0.0,Cu = 0.980875738,Fe = 0.0,Mg = 2.73937676,Mn = 0.0,Ni = 0.0,Si = 0.0,Ti = 0.0,V = 0.0,Zn = 2.77218363,] ##'}, {'Q': '## [Al = 92.88296375,Co = 0.0,Cr = 0.103545675,Cu = 0.695641546,Fe = 0.004566751,Mg = 3.276120188,Mn = 0.0,Ni = 0.0,Si = 0.010089438,Ti = 0.011839761,V = 0.0,Zn = 3.015232889,] ##', 'A': '## [Al = 92.88296375,Co = 0.0,Cr = 0.103545675,Cu = 0.695641546,Fe = 0.004566751,Mg = 3.276120188,Mn = 0.0,Ni = 0.0,Si = 0.010089438,Ti = 0.011839761,V = 0.0,Zn = 3.015232889,] ##'}, {'Q': '## [Al = 92.88296375,Co = 0.0,Cr = 0.103545675,Cu = 0.695641546,Fe = 0.004566751,Mg = 3.276120188,Mn = 0.0,Ni = 0.0,Si = 0.010089438,Ti = 0.011839761,V = 0.0,Zn = 3.015232889,] ##', 'A': '## [Al = 92.88296375,Co = 0.0,Cr = 0.103545675,Cu = 0.695641546,Fe = 0.004566751,Mg = 3.276120188,Mn = 0.0,Ni = 0.0,Si = 0.010089438,Ti = 0.011839761,V = 0.0,Zn = 3.015232889,] ##'}, {'Q': '## [Al = 92.62983176,Co = 0.0,Cr = 0.104004348,Cu = 0.662891058,Fe = 0.00458698,Mg = 3.208659267,Mn = 0.0,Ni = 0.0,Si = 0.010134131,Ti = 0.011892207,V = 0.0,Zn = 3.368000248,] ##', 'A': '## [Al = 92.62983176,Co = 0.0,Cr = 0.104004348,Cu = 0.662891058,Fe = 0.00458698,Mg = 3.208659267,Mn = 0.0,Ni = 0.0,Si = 0.010134131,Ti = 0.011892207,V = 0.0,Zn = 3.368000248,] ##'}, {'Q': '## [Al = 92.62983176,Co = 0.0,Cr = 0.104004348,Cu = 0.662891058,Fe = 0.00458698,Mg = 3.208659267,Mn = 0.0,Ni = 0.0,Si = 0.010134131,Ti = 0.011892207,V = 0.0,Zn = 3.368000248,] ##', 'A': '## [Al = 92.62983176,Co = 0.0,Cr = 0.104004348,Cu = 0.662891058,Fe = 0.00458698,Mg = 3.208659267,Mn = 0.0,Ni = 0.0,Si = 0.010134131,Ti = 0.011892207,V = 0.0,Zn = 3.368000248,] ##'}, {'Q': '## [Al = 91.88037681,Co = 0.0,Cr = 0.0,Cu = 1.132760555,Fe = 0.025779354,Mg = 3.080094562,Mn = 0.0,Ni = 0.0,Si = 0.051259477,Ti = 0.0,V = 0.0,Zn = 3.82972924,] ##', 'A': '## [Al = 91.88037681,Co = 0.0,Cr = 0.0,Cu = 1.132760555,Fe = 0.025779354,Mg = 3.080094562,Mn = 0.0,Ni = 0.0,Si = 0.051259477,Ti = 0.0,V = 0.0,Zn = 3.82972924,] ##'}, {'Q': '## [Al = 91.88037681,Co = 0.0,Cr = 0.0,Cu = 1.132760555,Fe = 0.025779354,Mg = 3.080094562,Mn = 0.0,Ni = 0.0,Si = 0.051259477,Ti = 0.0,V = 0.0,Zn = 3.82972924,] ##', 'A': '## [Al = 91.88037681,Co = 0.0,Cr = 0.0,Cu = 1.132760555,Fe = 0.025779354,Mg = 3.080094562,Mn = 0.0,Ni = 0.0,Si = 0.051259477,Ti = 0.0,V = 0.0,Zn = 3.82972924,] ##'}]"}]

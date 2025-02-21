@@ -1,0 +1,87 @@
+Coding and Prompt for generate Knowledge book of HEA (Generate HEA_knowledge2_0.txt)
+
+1. Coding:
+
+    def examples_generator(self):
+        examples = []
+        HEA_D = ['C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.datax_HEA)[0]):
+            HEA = {}
+            StrHEA = '['
+            for j in range(len(HEA_D)):
+                StrHEA += f'{HEA_D[j]} = {self.datax_HEA[i,j]}'
+                if j <= len(HEA_D)-1:
+                    StrHEA += ','
+            StrHEA += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.datay_HEA[i,j]}'
+                if j <= len(Objective_name)-1:
+                    StrObj += ','
+            StrObj += ']'
+
+            HEA['Composition'] = '## ' + StrHEA + ' ##'
+            HEA['Fitness values'] = '## ' + StrObj + ' ##'
+            examples.append(HEA)
+        return examples
+
+    def prompt_template_generator(self):
+        examples = self.examples_generator()
+
+
+        prefix = f"""
+        The following is offline HEA alloy data composed of compositions and fitness values.
+        The fitness values include:
+        - Yield strength (YS): Enhancing load-bearing capacity.
+        - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.
+        - Elongation: Ensuring toughness and deformability.
+
+        Your task:
+        1. Gather relevant knowledge about HEA alloys.
+        2. Compute the correlation between each composition and each fitness value.
+        3. Perform multiple regression analysis and combine knowledge about HEA alloys to evaluate its impact on each fitness value.
+        4. Use SHAP values and combine knowledge about HEA alloys to further quantify every compositions' contribution.
+
+        Your response **must** contain only the **quantitative and qualitative analysis of every components' impact on fitness values including *specific SHAP value* **, strictly within **500 words**. **Do not** generate any additional statements or explanations.
+        Compositions: 'C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti'
+        Output format example--[composition]: [qualitative analysis to 'YS', 'UTS', 'Elongation']. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).
+        """
+
+        prefix += f'{examples}'
+
+        return prefix
+
+    def K_gnerates(self):
+        FewShotprompt = self.prompt_template_generator()
+        message = []
+        message.append({"role": "system","content": "You are a expert in the HEA alloy research"})
+        message.append({"role": "user", "content": FewShotprompt})
+        client = OpenAI(
+            base_url="*******************",
+            api_key="************"
+        )
+        while True:
+            start_time = time.time()
+            self.rate_limiter.add_request(request_text=FewShotprompt, current_time=start_time)
+            resp = client.chat.completions.create(
+                model='gpt-4o',
+                messages=message,
+                temperature=0.8,
+            )
+
+
+
+
+
+2. String:
+
+Out[1]: 
+[{'role': 'system', 'content': 'You are a expert in the HEA alloy research'},
+ {'role': 'user',
+  'content': "\n        The following is offline HEA alloy data composed of compositions and fitness values.\n        The fitness values include:\n        - Yield strength (YS): Enhancing load-bearing capacity.\n        - Ultimate tensile strength (UTS): Increasing material performance under extreme conditions.\n        - Elongation: Ensuring toughness and deformability.\n\n        Your task:\n        1. Gather relevant knowledge about HEA alloys.\n        2. Compute the correlation between each composition and each fitness value.\n        3. Perform multiple regression analysis and combine knowledge about HEA alloys to evaluate its impact on each fitness value.\n        4. Use SHAP values and combine knowledge about HEA alloys to further quantify every compositions' contribution.\n\n        Your response **must** contain only the **quantitative and qualitative analysis of every components' impact on fitness values including *specific SHAP value* **, strictly within **500 words**. **Do not** generate any additional statements or explanations.\n        Compositions: 'C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti'\n        Output format example--[composition]: [qualitative analysis to 'YS', 'UTS', 'Elongation']. Correlation coefficients: YS (number), UTS (number), elongation (number). SHAP values: YS (number), UTS (number), elongation (number).\n        [{'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1720.0,UTS = 1720.0,Elongation = 9.0,] ##'}, {'Composition': '## [C = 0.0,Al = 7.0,V = 31.0,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1634.0,UTS = 1867.0,Elongation = 3.5,] ##'}, {'Composition': '## [C = 0.0,Al = 16.39,V = 0.0,Cr = 16.39,Mn = 0.0,Fe = 16.39,Co = 16.39,Ni = 34.44,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1625.0,UTS = 1800.0,Elongation = 6.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 7.99,Cr = 14.5,Mn = 3.25,Fe = 14.92,Co = 35.42,Ni = 21.43,Cu = 2.49,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1506.0,UTS = 1529.0,Elongation = 10.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 18.0,Ni = 7.0,Cu = 0.0,Mo = 7.5,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1502.0,UTS = 1502.0,Elongation = 11.4,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1470.0,UTS = 1470.0,Elongation = 15.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1100.0,UTS = 1260.0,Elongation = 32.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1053.0,UTS = 1201.0,Elongation = 35.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 1020.0,UTS = 1200.0,Elongation = 36.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 982.0,UTS = 1191.0,Elongation = 43.0,] ##'}, {'Composition': '## [C = 0.0,Al = 9.09,V = 0.0,Cr = 30.303,Mn = 0.0,Fe = 0.0,Co = 30.303,Ni = 30.304,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 945.0,UTS = 1230.0,Elongation = 37.5,] ##'}, {'Composition': '## [C = 0.0,Al = 6.96,V = 0.0,Cr = 23.26,Mn = 0.0,Fe = 23.26,Co = 23.26,Ni = 23.26,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 860.0,UTS = 1050.0,Elongation = 48.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 847.0,UTS = 1121.0,Elongation = 51.0,] ##'}, {'Composition': '## [C = 0.0,Al = 3.125,V = 0.0,Cr = 31.25,Mn = 0.0,Fe = 0.0,Co = 31.25,Ni = 31.25,Cu = 0.0,Mo = 3.125,Ti = 0.0,] ##', 'Fitness values': '## [YS = 842.0,UTS = 1201.0,Elongation = 38.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 33.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 787.0,UTS = 1245.0,Elongation = 43.4,] ##'}, {'Composition': '## [C = 0.0,Al = 3.0,V = 32.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 783.0,UTS = 1277.0,Elongation = 42.6,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 23.0,Mn = 31.0,Fe = 0.0,Co = 23.0,Ni = 23.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 740.0,UTS = 1260.0,Elongation = 43.9,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 31.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 7.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 652.0,UTS = 1253.0,Elongation = 44.0,] ##'}, {'Composition': '## [C = 2.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 17.5,Ni = 10.0,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 617.0,UTS = 1057.0,Elongation = 52.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 33.3333,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 615.8,UTS = 1129.8,Elongation = 52.8,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.34,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.33,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 612.0,UTS = 1034.0,Elongation = 57.3,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 601.0,UTS = 992.0,Elongation = 64.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 10.0,Fe = 40.0,Co = 20.0,Ni = 10.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 589.0,UTS = 865.0,Elongation = 69.1,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 10.0,Co = 50.0,Ni = 10.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 576.0,UTS = 1133.0,Elongation = 60.6,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 32.34,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.33,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 535.0,UTS = 963.0,Elongation = 73.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 15.0,Co = 40.0,Ni = 15.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 461.0,UTS = 988.0,Elongation = 91.4,] ##'}, {'Composition': '## [C = 0.93,Al = 0.0,V = 0.0,Cr = 19.814,Mn = 19.814,Fe = 19.814,Co = 19.814,Ni = 19.814,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 401.0,UTS = 1147.0,Elongation = 64.0,] ##'}, {'Composition': '## [C = 1.1,Al = 7.42,V = 0.0,Cr = 5.93,Mn = 34.42,Fe = 39.96,Co = 0.0,Ni = 11.17,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 355.0,UTS = 1174.0,Elongation = 49.5,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 20.0,Fe = 20.0,Co = 20.0,Ni = 20.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 253.0,UTS = 1062.0,Elongation = 77.0,] ##'}, {'Composition': '## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 15.0,Fe = 15.0,Co = 35.0,Ni = 15.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##', 'Fitness values': '## [YS = 231.0,UTS = 688.0,Elongation = 96.0,] ##'}]"}]
+
+
+
+

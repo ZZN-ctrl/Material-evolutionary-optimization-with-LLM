@@ -1,0 +1,91 @@
+Coding and Prompt for evaluate the candidate C1 of HEA 
+
+1. Coding
+    def examples_generator(self):
+        examples = []
+        HEA_D = ['C', 'Al', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Mo', 'Ti']
+        Objective_name = ['YS', 'UTS', 'Elongation']
+        for i in range(np.shape(self.HEA_X)[0]):
+            HEA = {}
+            StrHEA = '['
+            for j in range(len(HEA_D)):
+                StrHEA += f'{HEA_D[j]} = {self.HEA_X[i,j]}'
+                if j <= len(HEA_D)-1:
+                    StrHEA += ','
+            StrHEA += ']'
+
+            StrObj = '['
+            for j in range(len(Objective_name)):
+                StrObj += f'{Objective_name[j]} = {self.HEA_Y[i,j]}'
+                if j <= len(Objective_name)-1:
+                    StrObj += ','
+            StrObj += ']'
+
+            HEA['Q'] = '## ' + StrHEA + ' ##'
+            HEA['A'] = '## ' + StrObj + ' ##'
+            examples.append(HEA)
+        return examples
+
+    def prompt_template_generator(self, Re_X, HEA_knowledge):
+        examples = self.examples_generator()
+        example_template = """
+        Alloy compositions: {Q}
+        Fitness value: {A}
+        """
+
+        example_prompt = PromptTemplate(
+            input_variables=["Q", "A"],
+            template=example_template
+        )
+
+        prefix = 'The following are the offline HEA alloy data composed by the HEA compositions and the Fitness value. \n'
+        prefix += 'The corresponding fitness values includes: yield strength (YS: enhancing load-bearing capacity), ultimate tensile strength (UTS: increasing material performance under extreme conditions), and elongation (Elongation: ensuring toughness and deformability) to meet the diverse demands of various applications.\n'
+        prefix += 'Firstly, you need to think about the impact of the proportion of different compositions on fitness values from the perspective of a materials expert.\n'
+        prefix += f'The relationship between each component of HEA data and the objective value is: {HEA_knowledge}\n'
+        prefix += 'Then, you need to analyze the relationship between different compositions and Fitness values based on offline HEA alloy data, and then perform the regression. \n'
+        prefix += 'Based on the material analysis and regression analysis mentioned above, you need predict the Fitness values of the following alloy: \n'
+        prefix += f' {Re_X} \n'
+        prefix += 'Your response must only contain the predicted Fitness value, in the format of ## [YS=, UTS=, Elongation=] ##. Do not generate other statement.'
+
+        suffix = ''' 
+        Alloy compositions: {X}
+        Fitness value:
+        '''
+
+
+        Fewshotprompt = FewShotPromptTemplate(
+            examples=examples,
+            example_prompt=example_prompt,
+            prefix=prefix,
+            suffix=suffix,
+            input_variables=["Q"]
+        )
+
+        return Fewshotprompt
+
+    def LLM_prediction(self, Re_X, HEA_knowledge):
+        FewShotprompt = self.prompt_template_generator(Re_X, HEA_knowledge)
+        user_message  = FewShotprompt.format(X=Re_X)
+        message = []
+        message.append({"role": "system","content": "You are a expert in the HEA and Al  research"})
+        message.append({"role": "user", "content": user_message})
+        client = OpenAI(
+            base_url="***************",
+            api_key="***************"
+        )
+        while True:
+            start_time = time.time()
+            self.rate_limiter.add_request(request_text=user_message, current_time=start_time)
+            resp = client.chat.completions.create(
+                model='gpt-4o',
+                messages=message,
+                temperature=0.8,
+            )
+
+
+2. String
+
+Out[1]: 
+[{'role': 'system', 'content': 'You are a expert in the HEA  research'},
+ {'role': 'user',
+  'content': 'The following are the offline HEA alloy data composed by the HEA compositions and the Fitness value. \nThe corresponding fitness values includes: yield strength (YS: enhancing load-bearing capacity), ultimate tensile strength (UTS: increasing material performance under extreme conditions), and elongation (Elongation: ensuring toughness and deformability) to meet the diverse demands of various applications.\nFirstly, you need to think about the impact of the proportion of different compositions on fitness values from the perspective of a materials expert.\nThe relationship between each component of HEA data and the objective value is: [C]: Minimal presence. Correlation coefficients: YS (-0.45), UTS (-0.02), elongation (-0.22). SHAP values: YS (-0.48), UTS (0.01), elongation (-0.19).\n[Al]: Decreases strength, enhances elongation. Correlation coefficients: YS (-0.51), UTS (-0.19), elongation (0.24). SHAP values: YS (-0.53), UTS (-0.22), elongation (0.28).\n[V]: Increases strength, moderate effect on elongation. Correlation coefficients: YS (0.66), UTS (0.54), elongation (0.02). SHAP values: YS (0.69), UTS (0.57), elongation (0.05).\n[Cr]: Balances strength and ductility. Correlation coefficients: YS (0.46), UTS (0.38), elongation (0.12). SHAP values: YS (0.43), UTS (0.36), elongation (0.15).\n[Mn]: Moderate influence on elongation. Correlation coefficients: YS (-0.19), UTS (-0.23), elongation (0.31). SHAP values: YS (-0.20), UTS (-0.25), elongation (0.34).\n[Fe]: Enhances ductility, decreases strength. Correlation coefficients: YS (-0.48), UTS (-0.52), elongation (0.39). SHAP values: YS (-0.50), UTS (-0.55), elongation (0.42).\n[Co]: Improves strength, slightly reduces elongation. Correlation coefficients: YS (0.57), UTS (0.63), elongation (-0.14). SHAP values: YS (0.60), UTS (0.66), elongation (-0.11).\n[Ni]: Balances between strength and ductility. Correlation coefficients: YS (0.05), UTS (0.11), elongation (0.06). SHAP values: YS (0.03), UTS (0.08), elongation (0.09).\n[Cu]: Limited impact, mostly neutral. Correlation coefficients: YS (0.02), UTS (0.00), elongation (0.01). SHAP values: YS (0.01), UTS (-0.01), elongation (0.02).\n[Mo]: Improves strength, slight effect on elongation. Correlation coefficients: YS (0.29), UTS (0.28), elongation (-0.05). SHAP values: YS (0.31), UTS (0.27), elongation (-0.03).\n[Ti]: Minimal presence, low impact. Correlation coefficients: YS (-0.01), UTS (-0.02), elongation (-0.03). SHAP values: YS (-0.01), UTS (-0.03), elongation (-0.02).\nThen, you need to analyze the relationship between different compositions and Fitness values based on offline HEA alloy data, and then perform the regression. \nBased on the material analysis and regression analysis mentioned above, you need predict the Fitness values of the following alloy: \n [C=0.5,Al=0.0,V=0.0,Cr=10.0,Mn=30.0,Fe=49.5,Co=10.0,Ni=0.0,Cu=0.0,Mo=0.0,Ti=0.0] \nYour response must only contain the predicted Fitness value, in the format of ## [YS=, UTS=, Elongation=] ##. Do not generate other statement.\n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1720.0,UTS = 1720.0,Elongation = 9.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 7.0,V = 31.0,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1634.0,UTS = 1867.0,Elongation = 3.5,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 16.39,V = 0.0,Cr = 16.39,Mn = 0.0,Fe = 16.39,Co = 16.39,Ni = 34.44,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1625.0,UTS = 1800.0,Elongation = 6.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 7.99,Cr = 14.5,Mn = 3.25,Fe = 14.92,Co = 35.42,Ni = 21.43,Cu = 2.49,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1506.0,UTS = 1529.0,Elongation = 10.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 18.0,Ni = 7.0,Cu = 0.0,Mo = 7.5,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1502.0,UTS = 1502.0,Elongation = 11.4,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1470.0,UTS = 1470.0,Elongation = 15.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1100.0,UTS = 1260.0,Elongation = 32.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1053.0,UTS = 1201.0,Elongation = 35.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 0.0,Fe = 6.0,Co = 34.0,Ni = 34.0,Cu = 0.0,Mo = 6.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 1020.0,UTS = 1200.0,Elongation = 36.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 982.0,UTS = 1191.0,Elongation = 43.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 9.09,V = 0.0,Cr = 30.303,Mn = 0.0,Fe = 0.0,Co = 30.303,Ni = 30.304,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 945.0,UTS = 1230.0,Elongation = 37.5,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 6.96,V = 0.0,Cr = 23.26,Mn = 0.0,Fe = 23.26,Co = 23.26,Ni = 23.26,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 860.0,UTS = 1050.0,Elongation = 48.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 847.0,UTS = 1121.0,Elongation = 51.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 3.125,V = 0.0,Cr = 31.25,Mn = 0.0,Fe = 0.0,Co = 31.25,Ni = 31.25,Cu = 0.0,Mo = 3.125,Ti = 0.0,] ##\n        Fitness value: ## [YS = 842.0,UTS = 1201.0,Elongation = 38.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 33.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 787.0,UTS = 1245.0,Elongation = 43.4,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 3.0,V = 32.33,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.34,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 783.0,UTS = 1277.0,Elongation = 42.6,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 23.0,Mn = 31.0,Fe = 0.0,Co = 23.0,Ni = 23.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 740.0,UTS = 1260.0,Elongation = 43.9,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 31.0,Mn = 0.0,Fe = 0.0,Co = 31.0,Ni = 31.0,Cu = 0.0,Mo = 7.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 652.0,UTS = 1253.0,Elongation = 44.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 2.0,Al = 0.0,V = 0.0,Cr = 12.5,Mn = 0.0,Fe = 55.0,Co = 17.5,Ni = 10.0,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 617.0,UTS = 1057.0,Elongation = 52.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 33.3333,Cr = 0.0,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 615.8,UTS = 1129.8,Elongation = 52.8,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.34,Mn = 0.0,Fe = 0.0,Co = 33.33,Ni = 33.33,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 612.0,UTS = 1034.0,Elongation = 57.3,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 33.3333,Mn = 0.0,Fe = 0.0,Co = 33.3333,Ni = 33.3333,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 601.0,UTS = 992.0,Elongation = 64.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 10.0,Fe = 40.0,Co = 20.0,Ni = 10.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 589.0,UTS = 865.0,Elongation = 69.1,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 10.0,Co = 50.0,Ni = 10.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 576.0,UTS = 1133.0,Elongation = 60.6,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 32.34,Mn = 0.0,Fe = 0.0,Co = 32.33,Ni = 32.33,Cu = 0.0,Mo = 3.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 535.0,UTS = 963.0,Elongation = 73.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 25.0,Mn = 0.0,Fe = 15.0,Co = 40.0,Ni = 15.0,Cu = 0.0,Mo = 5.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 461.0,UTS = 988.0,Elongation = 91.4,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.93,Al = 0.0,V = 0.0,Cr = 19.814,Mn = 19.814,Fe = 19.814,Co = 19.814,Ni = 19.814,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 401.0,UTS = 1147.0,Elongation = 64.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 1.1,Al = 7.42,V = 0.0,Cr = 5.93,Mn = 34.42,Fe = 39.96,Co = 0.0,Ni = 11.17,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 355.0,UTS = 1174.0,Elongation = 49.5,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 20.0,Fe = 20.0,Co = 20.0,Ni = 20.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 253.0,UTS = 1062.0,Elongation = 77.0,] ##\n        \n\n\n        Alloy compositions: ## [C = 0.0,Al = 0.0,V = 0.0,Cr = 20.0,Mn = 15.0,Fe = 15.0,Co = 35.0,Ni = 15.0,Cu = 0.0,Mo = 0.0,Ti = 0.0,] ##\n        Fitness value: ## [YS = 231.0,UTS = 688.0,Elongation = 96.0,] ##\n        \n\n \n        Alloy compositions: [C=0.5,Al=0.0,V=0.0,Cr=10.0,Mn=30.0,Fe=49.5,Co=10.0,Ni=0.0,Cu=0.0,Mo=0.0,Ti=0.0]\n        Fitness value:\n        '}]
