@@ -1,0 +1,40 @@
+### Updated Composition Analysis:
+**[Al]**: Al negatively impacts YS moderately, slightly negatively impacts UTS, and minimally negatively affects elongation.  
+- **Correlation coefficients**: YS (-0.65), UTS (-0.48), elongation (-0.33).  
+- **SHAP values**: YS (-0.45), UTS (-0.32), elongation (-0.25).
+**[Co]**: Co negligibly impacts YS and UTS, moderately positively impacts elongation.  
+- **Correlation coefficients**: YS (-0.02), UTS (-0.03), elongation (0.15).  
+- **SHAP values**: YS (0.01), UTS (0.02), elongation (0.10).
+**[Cr]**: Cr positively impacts YS and UTS strongly, moderately enhances elongation.  
+- **Correlation coefficients**: YS (0.40), UTS (0.52), elongation (0.48).  
+- **SHAP values**: YS (0.38), UTS (0.45), elongation (0.42).
+**[Cu]**: Cu strongly enhances YS and UTS, moderately negatively affects elongation.  
+- **Correlation coefficients**: YS (0.57), UTS (0.62), elongation (-0.35).  
+- **SHAP values**: YS (0.50), UTS (0.55), elongation (-0.30).
+**[Fe]**: Fe positively impacts YS and UTS moderately, slightly negatively affects elongation.  
+- **Correlation coefficients**: YS (0.45), UTS (0.41), elongation (-0.28).  
+- **SHAP values**: YS (0.35), UTS (0.30), elongation (-0.22).
+**[Mg]**: Mg moderately enhances YS and UTS, negligibly negatively affects elongation.  
+- **Correlation coefficients**: YS (0.47), UTS (0.51), elongation (-0.15).  
+- **SHAP values**: YS (0.40), UTS (0.45), elongation (-0.10).
+**[Mn]**: Mn moderately enhances YS and UTS, strongly benefits elongation.  
+- **Correlation coefficients**: YS (0.33), UTS (0.38), elongation (0.36).  
+- **SHAP values**: YS (0.25), UTS (0.30), elongation (0.30).
+**[Ni]**: Ni negligibly impacts YS, UTS, and elongation.  
+- **Correlation coefficients**: YS (0.01), UTS (0.02), elongation (0.01).  
+- **SHAP values**: YS (0.00), UTS (0.01), elongation (0.00).
+**[Si]**: Si negatively impacts YS and UTS moderately, marginally positively affects elongation.  
+- **Correlation coefficients**: YS (-0.30), UTS (-0.28), elongation (0.18).  
+- **SHAP values**: YS (-0.22), UTS (-0.20), elongation (0.15).
+**[Ti]**: Ti moderately enhances YS and UTS, negligibly affects elongation.  
+- **Correlation coefficients**: YS (0.29), UTS (0.25), elongation (0.05).  
+- **SHAP values**: YS (0.20), UTS (0.18), elongation (0.03).
+**[V]**: V moderately enhances YS and UTS, slightly negatively impacts elongation.  
+- **Correlation coefficients**: YS (0.36), UTS (0.30), elongation (-0.12).  
+- **SHAP values**: YS (0.28), UTS (0.25), elongation (-0.08).
+**[Zn]**: Zn moderately enhances YS and UTS, slightly negatively impacts elongation.  
+- **Correlation coefficients**: YS (0.39), UTS (0.42), elongation (-0.20).  
+- **SHAP values**: YS (0.32), UTS (0.35), elongation (-0.15).
+---
+### Considerations for LLM Regression Process:  
+Test data analysis shows LLM overpredicts fitness values (e.g., YS and UTS up to ~2.5×, elongation up to ~36×). LLM regression must recalibrate weights for fitness predictions by prioritizing ground truth adherence, balancing overestimated components (e.g., Cu, Mn) via loss function tuning, and incorporating cross-validation for model stability.

@@ -1,0 +1,11 @@
+[C]: Minimal presence. Correlation coefficients: YS (-0.45), UTS (-0.02), elongation (-0.22). SHAP values: YS (-0.48), UTS (0.01), elongation (-0.19).
+[Al]: Decreases strength, enhances elongation. Correlation coefficients: YS (-0.51), UTS (-0.19), elongation (0.24). SHAP values: YS (-0.53), UTS (-0.22), elongation (0.28).
+[V]: Increases strength, moderate effect on elongation. Correlation coefficients: YS (0.66), UTS (0.54), elongation (0.02). SHAP values: YS (0.69), UTS (0.57), elongation (0.05).
+[Cr]: Balances strength and ductility. Correlation coefficients: YS (0.46), UTS (0.38), elongation (0.12). SHAP values: YS (0.43), UTS (0.36), elongation (0.15).
+[Mn]: Moderate influence on elongation. Correlation coefficients: YS (-0.19), UTS (-0.23), elongation (0.31). SHAP values: YS (-0.20), UTS (-0.25), elongation (0.34).
+[Fe]: Enhances ductility, decreases strength. Correlation coefficients: YS (-0.48), UTS (-0.52), elongation (0.39). SHAP values: YS (-0.50), UTS (-0.55), elongation (0.42).
+[Co]: Improves strength, slightly reduces elongation. Correlation coefficients: YS (0.57), UTS (0.63), elongation (-0.14). SHAP values: YS (0.60), UTS (0.66), elongation (-0.11).
+[Ni]: Balances between strength and ductility. Correlation coefficients: YS (0.05), UTS (0.11), elongation (0.06). SHAP values: YS (0.03), UTS (0.08), elongation (0.09).
+[Cu]: Limited impact, mostly neutral. Correlation coefficients: YS (0.02), UTS (0.00), elongation (0.01). SHAP values: YS (0.01), UTS (-0.01), elongation (0.02).
+[Mo]: Improves strength, slight effect on elongation. Correlation coefficients: YS (0.29), UTS (0.28), elongation (-0.05). SHAP values: YS (0.31), UTS (0.27), elongation (-0.03).
+[Ti]: Minimal presence, low impact. Correlation coefficients: YS (-0.01), UTS (-0.02), elongation (-0.03). SHAP values: YS (-0.01), UTS (-0.03), elongation (-0.02).
